@@ -1,0 +1,36 @@
+{
+  "name": "neon-countdown-timer",
+  "version": "1.0.0",
+  "description": "A frameless, always-on-top neon countdown timer.",
+  "main": "main.js",
+  "private": true,
+  "scripts": {
+    "start": "electron .",
+    "dist": "electron-builder"
+  },
+  "devDependencies": {
+    "electron": "^32.0.0",
+    "electron-builder": "^25.0.0"
+  },
+  "build": {
+    "appId": "com.midstreamridge.neontimer",
+    "productName": "Neon Countdown Timer",
+    "files": [
+      "main.js",
+      "timer.html",
+      "midstream-ridge-badge.png"
+    ],
+    "win": {
+      "target": "portable",
+      "icon": "midstream-ridge-badge.png"
+    },
+    "mac": {
+      "target": "dmg",
+      "icon": "midstream-ridge-badge.png"
+    },
+    "linux": {
+      "target": "AppImage",
+      "icon": "midstream-ridge-badge.png"
+    }
+  }
+}
