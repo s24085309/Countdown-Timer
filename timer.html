@@ -207,6 +207,32 @@
     padding:10px 16px;
   }
 
+  /* when floated (PiP or the Electron app), controls tuck away and only
+     reappear when the cursor is near the bottom edge or over the buttons */
+  #hoverZone{ display:none; }
+  #timerCard.is-floating #hoverZone{
+    display:block;
+    position:fixed;
+    left:0; right:0; bottom:0;
+    height:40px;
+    z-index:20;
+  }
+  #timerCard.is-floating #runControls,
+  #timerCard.is-floating #dismissControls{
+    position:fixed;
+    left:0; right:0; bottom:0;
+    margin:0;
+    padding:12px 10px calc(12px + env(safe-area-inset-bottom, 0px));
+    background:linear-gradient(to top, rgba(0,0,0,0.92), rgba(0,0,0,0));
+    transform:translateY(100%);
+    transition:transform .22s ease;
+    z-index:15;
+  }
+  #timerCard.is-floating.controls-visible #runControls,
+  #timerCard.is-floating.controls-visible #dismissControls{
+    transform:translateY(0);
+  }
+
   .schedule-list{ display:flex; flex-direction:column; gap:8px; }
   .schedule-item{
     display:flex; align-items:center; gap:8px;
@@ -268,6 +294,7 @@
       <button class="primary-btn" id="dismissBtn">🔕 Dismiss Alarm</button>
     </div>
     <div id="pipNote" class="hidden">Floating window works in Chrome / Edge on desktop — it will stay on top of PowerPoint, Word, and every other app.</div>
+    <div id="hoverZone"></div>
   </div>
 
   <!-- TIMER SETUP -->
@@ -669,13 +696,35 @@
       copyStylesInto(pipWindow.document);
       pipWindow.document.body.style.margin = '0';
       pipWindow.document.body.appendChild(timerCard);
+      timerCard.classList.add('is-floating');
       pipWindow.addEventListener('pagehide', () => {
+        timerCard.classList.remove('is-floating', 'controls-visible');
         originalParent.insertBefore(timerCard, originalNextSibling);
         pipWindow = null;
       });
     }catch(err){
       alert('Could not open the floating window: ' + err.message);
     }
+  });
+
+  // ---------- auto-hide controls while floating ----------
+  // buttons tuck below the edge and only reappear when the cursor nears
+  // the bottom of the floating window, or while it's already over them
+  const hoverZone = $('hoverZone');
+  let hideControlsTimer = null;
+  function showControls(){
+    clearTimeout(hideControlsTimer);
+    timerCard.classList.add('controls-visible');
+  }
+  function scheduleHideControls(){
+    clearTimeout(hideControlsTimer);
+    hideControlsTimer = setTimeout(() => {
+      timerCard.classList.remove('controls-visible');
+    }, 600);
+  }
+  [hoverZone, $('runControls'), $('dismissControls')].forEach(el => {
+    el.addEventListener('mouseenter', showControls);
+    el.addEventListener('mouseleave', scheduleHideControls);
   });
 
   // ---------- Electron shell detection ----------
@@ -686,6 +735,7 @@
     pipBtn.classList.add('hidden');
     $('closeAppBtn').classList.remove('hidden');
     $('closeAppBtn').addEventListener('click', () => window.close());
+    timerCard.classList.add('is-floating');
   }
 
   applyStage('idle');
