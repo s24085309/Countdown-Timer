@@ -11,7 +11,7 @@
     --text: #f5f5f5;
     --muted: rgba(245,245,245,0.6);
     --accent: #ffffff;
-    --glow: #00e5c3;
+    --glow: #ffe600;
   }
   *{box-sizing:border-box;}
   html,body{height:100%;}
@@ -28,12 +28,9 @@
   }
 
   /* ---- neon color stages (numbers glow, background stays black) ---- */
-  body.stage-green{ --glow:#00e5c3; }
-  body.stage-lightgreen{ --glow:#5df2d6; }
+  body.stage-yellow{ --glow:#ffe600; }
   body.stage-orange{ --glow:#ffb020; }
-  body.stage-darkorange{ --glow:#ff6a1a; }
   body.stage-red{ --glow:#ff2050; }
-  body.stage-idle{ --glow:#4a9dff; }
   body.flash #display{ animation: flashGlow .6s ease-in-out infinite; }
   @keyframes flashGlow{
     0%,100%{ color:#ff2050; text-shadow:0 0 10px #ff2050,0 0 26px #ff2050,0 0 60px #ff2050; }
@@ -288,7 +285,7 @@
   a{ color:inherit; }
 </style>
 </head>
-<body class="stage-idle">
+<body class="stage-yellow">
 <header>
   <img src="midstream-ridge-badge.png" alt="Midstream Ridge badge" id="schoolBadge" />
   <button class="tab active" data-mode="timer">Timer</button>
@@ -589,15 +586,13 @@
   function stageFor(remSec, totalSec){
     const remMin = remSec/60;
     if(remSec <= 0) return 'red';
-    if(remMin <= 5) return 'red';
-    if(remMin <= 15) return 'darkorange';
-    if(remMin <= 30) return 'orange';
-    if(totalSec > 0 && remSec <= totalSec/2) return 'lightgreen';
-    return 'green';
+    if(remMin <= 1) return 'red';
+    if(remMin <= 5) return 'orange';
+    return 'yellow';
   }
 
   function applyStage(stage){
-    ['stage-idle','stage-green','stage-lightgreen','stage-orange','stage-darkorange','stage-red']
+    ['stage-yellow','stage-orange','stage-red']
       .forEach(c => body.classList.remove(c));
     body.classList.add('stage-' + stage);
   }
@@ -658,7 +653,7 @@
     queue = []; queueIndex = -1;
     segmentLabelEl.textContent = '';
     upnextEl.textContent = '';
-    applyStage('idle');
+    applyStage('yellow');
     displayEl.textContent = '00:00';
   });
 
@@ -801,7 +796,7 @@
     timerCard.classList.add('is-floating');
   }
 
-  applyStage('idle');
+  applyStage('yellow');
 })();
 </script>
 </body>
