@@ -12,6 +12,10 @@
     --muted: rgba(245,245,245,0.6);
     --accent: #ffffff;
     --glow: #ffe600;
+    --glow-base: #ffe600;
+    --outline-color: #ffffff;
+    --outline-width: 2px;
+    --size-scale: 1;
   }
   *{box-sizing:border-box;}
   html,body{height:100%;}
@@ -28,7 +32,7 @@
   }
 
   /* ---- neon color stages (numbers glow, background stays black) ---- */
-  body.stage-yellow{ --glow:#ffe600; }
+  body.stage-yellow{ --glow:var(--glow-base); }
   body.stage-orange{ --glow:#ffb020; }
   body.stage-red{ --glow:#ff2050; }
   body.flash #display{ animation: flashGlow .6s ease-in-out infinite; }
@@ -136,6 +140,16 @@
   label{ font-size:13px; color:var(--muted); }
   .hint-text{ font-size:12px; color:var(--muted); min-height:15px; }
   .row{ display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+  input[type=color]{
+    width:40px;
+    height:34px;
+    padding:2px;
+    border-radius:8px;
+    border:1px solid rgba(255,255,255,0.25);
+    background:rgba(0,0,0,0.2);
+    cursor:pointer;
+  }
+  input[type=range]{ accent-color:#ffe600; }
 
   .primary-btn{
     padding:12px 18px;
@@ -185,7 +199,7 @@
     min-height:0;
     /* modest size in the normal in-page view; the floating window gets
        the much larger fluid size below since it's a small standalone box */
-    font-size:clamp(40px, 11vw, 110px);
+    font-size:calc(clamp(40px, 11vw, 110px) * var(--size-scale));
     background:#000;
     border:none;
     border-radius:12px;
@@ -195,7 +209,7 @@
     overflow:visible;
   }
   #timerCard.is-floating #displayFrame{
-    font-size:clamp(28px, min(22vw, 32vh), 260px);
+    font-size:calc(clamp(28px, min(22vw, 32vh), 260px) * var(--size-scale));
   }
   #display{
     font-size:inherit;
@@ -205,7 +219,7 @@
     letter-spacing:0.02em;
     text-align:center;
     color:var(--glow);
-    -webkit-text-stroke:2px #ffffff;
+    -webkit-text-stroke:var(--outline-width) var(--outline-color);
     paint-order:stroke fill;
     text-shadow:
       0 0 clamp(4px,1vw,10px) var(--glow),
@@ -291,6 +305,7 @@
   <button class="tab active" data-mode="timer">Timer</button>
   <button class="tab" data-mode="schedule">Schedule</button>
   <button class="tab" data-mode="sound">Alarm Sound</button>
+  <button class="tab" data-mode="settings">Settings</button>
   <button id="closeAppBtn" class="hidden" title="Close" aria-label="Close">✕</button>
 </header>
 
@@ -356,6 +371,29 @@
     <div id="soundName" style="font-size:13px;color:var(--muted);"></div>
     <label>Volume</label>
     <input type="range" id="volume" min="0" max="1" step="0.05" value="0.8" />
+  </section>
+
+  <!-- SETTINGS -->
+  <section class="panel hidden" id="panel-settings">
+    <label>Digit colour</label>
+    <div class="row">
+      <input type="color" id="digitColor" value="#ffe600" />
+      <span id="digitColorHex" class="hint-text">#FFE600</span>
+    </div>
+    <label>Digit outline</label>
+    <div class="row">
+      <input type="color" id="outlineColor" value="#ffffff" />
+      <span id="outlineColorHex" class="hint-text">#FFFFFF</span>
+      <label for="outlineWidth" style="margin-left:8px;">Width</label>
+      <input type="range" id="outlineWidth" min="0" max="6" step="1" value="2" style="flex:1; min-width:100px;" />
+      <span id="outlineWidthLabel" class="hint-text">2px</span>
+    </div>
+    <label>Digit size</label>
+    <div class="row">
+      <input type="range" id="digitSize" min="50" max="200" step="5" value="100" style="flex:1; min-width:140px;" />
+      <span id="digitSizeLabel" class="hint-text">100%</span>
+    </div>
+    <button class="ghost-btn" id="resetAppearanceBtn">Reset to defaults</button>
   </section>
 </main>
 
@@ -440,6 +478,38 @@
   });
   loadSound();
 
+  // ---------- appearance settings (digit colour/outline/size) ----------
+  const APPEARANCE_DEFAULTS = { digitColor: '#ffe600', outlineColor: '#ffffff', outlineWidth: 2, sizePercent: 100 };
+  const root = document.documentElement;
+  function applyAppearance(a){
+    root.style.setProperty('--glow-base', a.digitColor);
+    root.style.setProperty('--outline-color', a.outlineColor);
+    root.style.setProperty('--outline-width', a.outlineWidth + 'px');
+    root.style.setProperty('--size-scale', a.sizePercent / 100);
+    $('digitColor').value = a.digitColor;
+    $('digitColorHex').textContent = a.digitColor.toUpperCase();
+    $('outlineColor').value = a.outlineColor;
+    $('outlineColorHex').textContent = a.outlineColor.toUpperCase();
+    $('outlineWidth').value = a.outlineWidth;
+    $('outlineWidthLabel').textContent = a.outlineWidth + 'px';
+    $('digitSize').value = a.sizePercent;
+    $('digitSizeLabel').textContent = a.sizePercent + '%';
+  }
+  function saveAppearance(a){ store.set('timer_appearance', a); }
+  function loadAppearance(){ return store.get('timer_appearance', APPEARANCE_DEFAULTS); }
+  let appearance = loadAppearance();
+  applyAppearance(appearance);
+  function updateAppearance(patch){
+    appearance = Object.assign({}, appearance, patch);
+    applyAppearance(appearance);
+    saveAppearance(appearance);
+  }
+  $('digitColor').addEventListener('input', (e) => updateAppearance({ digitColor: e.target.value }));
+  $('outlineColor').addEventListener('input', (e) => updateAppearance({ outlineColor: e.target.value }));
+  $('outlineWidth').addEventListener('input', (e) => updateAppearance({ outlineWidth: parseInt(e.target.value, 10) }));
+  $('digitSize').addEventListener('input', (e) => updateAppearance({ sizePercent: parseInt(e.target.value, 10) }));
+  $('resetAppearanceBtn').addEventListener('click', () => updateAppearance(APPEARANCE_DEFAULTS));
+
   function ringAlarm(){
     if(customSoundData){
       alarmAudio.loop = true;
@@ -467,7 +537,7 @@
   });
 
   // ---------- tabs ----------
-  const panels = { timer: $('panel-timer'), schedule: $('panel-schedule'), sound: $('panel-sound') };
+  const panels = { timer: $('panel-timer'), schedule: $('panel-schedule'), sound: $('panel-sound'), settings: $('panel-settings') };
   document.querySelectorAll('.tab').forEach(tab => {
     tab.addEventListener('click', () => {
       document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
