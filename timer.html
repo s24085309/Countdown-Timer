@@ -180,6 +180,7 @@
     min-height:18px;
     text-align:center;
   }
+  #timerCard.is-floating #segmentLabel{ display:none; }
   #displayFrame{
     width:94%;
     flex:0 1 auto;
@@ -212,9 +213,9 @@
   #upnext{ font-size:13px; color:var(--muted); min-height:16px; }
   .controls{ display:flex; gap:10px; flex-wrap:wrap; justify-content:center; }
   .icon-only-btn{
-    font-size:26px;
+    font-size:13px;
     line-height:1;
-    padding:10px 16px;
+    padding:5px 8px;
   }
 
   /* when floated (PiP or the Electron app), controls tuck away and only
@@ -777,7 +778,7 @@
       timerCard.classList.remove('controls-visible');
     }, 600);
   }
-  [hoverZone, $('runControls'), $('dismissControls')].forEach(el => {
+  [hoverZone, $('displayFrame'), $('runControls'), $('dismissControls')].forEach(el => {
     el.addEventListener('mouseenter', showControls);
     el.addEventListener('mouseleave', scheduleHideControls);
   });
