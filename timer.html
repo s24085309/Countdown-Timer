@@ -127,7 +127,17 @@
     font-size:16px;
     text-align:center;
   }
+  .custom-row input[type=time]{
+    padding:10px;
+    border-radius:10px;
+    border:1px solid rgba(255,255,255,0.25);
+    background:rgba(0,0,0,0.2);
+    color:var(--text);
+    font-size:16px;
+    color-scheme:dark;
+  }
   label{ font-size:13px; color:var(--muted); }
+  .hint-text{ font-size:12px; color:var(--muted); min-height:15px; }
   .row{ display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
 
   .primary-btn{
@@ -308,6 +318,12 @@
       <input type="number" id="customSec" min="0" max="59" placeholder="ss" />
       <button class="primary-btn" id="startCustomBtn">Start</button>
     </div>
+    <label>Countdown to a time of day</label>
+    <div class="custom-row">
+      <input type="time" id="targetTime" />
+      <button class="primary-btn" id="startTargetBtn">Start</button>
+    </div>
+    <div id="targetHint" class="hint-text"></div>
     <div class="row">
       <input type="checkbox" id="autoBreak" />
       <label for="autoBreak">Start a break automatically when this ends, for</label>
@@ -471,6 +487,44 @@
     const total = min*60 + sec;
     if(total <= 0) return;
     beginOrAddTime(total);
+  });
+
+  // ---------- countdown to a time of day ----------
+  // e.g. "10:00 AM" auto-calculates how many seconds from now that is,
+  // rolling over to tomorrow if that time has already passed today
+  function formatClock12(hh, mm){
+    const period = hh >= 12 ? 'PM' : 'AM';
+    let h12 = hh % 12;
+    if(h12 === 0) h12 = 12;
+    return h12 + ':' + String(mm).padStart(2, '0') + ' ' + period;
+  }
+  function secondsUntilTimeOfDay(hh, mm){
+    const now = new Date();
+    const target = new Date(now.getFullYear(), now.getMonth(), now.getDate(), hh, mm, 0, 0);
+    let isTomorrow = false;
+    if(target <= now){
+      target.setDate(target.getDate() + 1);
+      isTomorrow = true;
+    }
+    return { seconds: Math.round((target - now) / 1000), isTomorrow };
+  }
+  function updateTargetHint(){
+    const val = $('targetTime').value;
+    const hint = $('targetHint');
+    if(!val){ hint.textContent = ''; return; }
+    const [hh, mm] = val.split(':').map(Number);
+    const { seconds, isTomorrow } = secondsUntilTimeOfDay(hh, mm);
+    hint.textContent = 'Goes off in ' + formatDurationLabel(seconds).replace(' countdown', '')
+      + ' — at ' + formatClock12(hh, mm) + (isTomorrow ? ' tomorrow' : '');
+  }
+  $('targetTime').addEventListener('input', updateTargetHint);
+  $('startTargetBtn').addEventListener('click', () => {
+    const val = $('targetTime').value;
+    if(!val) return;
+    const [hh, mm] = val.split(':').map(Number);
+    const { seconds, isTomorrow } = secondsUntilTimeOfDay(hh, mm);
+    if(seconds <= 0) return;
+    beginOrAddTime(seconds, 'Until ' + formatClock12(hh, mm) + (isTomorrow ? ' tomorrow' : ''));
   });
 
   // formats a duration as "1h 18m countdown" / "45m countdown" / "30s countdown"
