@@ -186,7 +186,9 @@
     max-width:98%;
     flex:0 0 auto;
     min-height:0;
-    font-size:clamp(28px, min(22vw, 32vh), 260px);
+    /* modest size in the normal in-page view; the floating window gets
+       the much larger fluid size below since it's a small standalone box */
+    font-size:clamp(40px, 11vw, 110px);
     background:#000;
     border:1px solid rgba(255,255,255,0.12);
     border-radius:12px;
@@ -195,8 +197,11 @@
     justify-content:center;
     overflow:visible;
   }
-  #display{
+  #timerCard.is-floating #displayFrame{
     font-size:clamp(28px, min(22vw, 32vh), 260px);
+  }
+  #display{
+    font-size:inherit;
     line-height:1.2;
     font-variant-numeric:tabular-nums;
     font-weight:800;
