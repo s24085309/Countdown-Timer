@@ -529,14 +529,10 @@
 
   // formats a duration as "1h 18m countdown" / "45m countdown" / "30s countdown"
   function formatDurationLabel(seconds){
-    seconds = Math.round(seconds);
-    const h = Math.floor(seconds / 3600);
-    const m = Math.floor((seconds % 3600) / 60);
-    const s = seconds % 60;
-    let parts;
-    if(h > 0) parts = [h + 'h', m + 'm'];
-    else if(m > 0) parts = [m + 'm'];
-    else parts = [s + 's'];
+    const totalMinutes = Math.max(1, Math.round(seconds / 60));
+    const h = Math.floor(totalMinutes / 60);
+    const m = totalMinutes % 60;
+    const parts = h > 0 ? [h + 'h', m + 'm'] : [m + 'm'];
     return parts.join(' ') + ' countdown';
   }
 
@@ -572,6 +568,11 @@
 
   function fmt(s){
     s = Math.max(0, Math.round(s));
+    if(s >= 3600){
+      const h = Math.floor(s / 3600);
+      const m = Math.floor((s % 3600) / 60);
+      return h + 'h ' + String(m).padStart(2,'0') + 'm';
+    }
     const m = Math.floor(s/60);
     const sec = s % 60;
     return String(m).padStart(2,'0') + ':' + String(sec).padStart(2,'0');
